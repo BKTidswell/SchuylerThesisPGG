@@ -1,0 +1,24 @@
+{
+  "name": "meritocracy",
+  "description": "Plays a public-goods game with assortativity matching with nodegame",
+  "version": "0.2.0",
+  "author": {
+    "name": "Stefano Balietti",
+    "email": "info@nodegame.org",
+    "url": "http://www.nodegame.org"
+  }
+,
+  "main": "./index.html"
+,
+  "keywords": [
+    "meritocracy",
+    "game theory"
+  ]
+,
+  "license": "MIT/X11"
+,
+  "engines": {
+    "node": "*",
+    "nodegame": ">= 3.0.0"
+  }
+}
