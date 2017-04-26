@@ -109,29 +109,36 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
 
             barsDiv.innerHTML = '';
 
+            // Get a reference to the bars obj (see public/js/merit.bars.js).
             bars = W.getFrameWindow().bars;
 
+            // Loop through all the groups (each group contains the
+            // players' contributions).
             for (i = 0; i < barsValues[0].length; i++) {
-                group = barsValues[0][i];
                 div = document.createElement('div');
                 div.classList.add('groupContainer');
+
+                // The name of the group.
                 groupHeader = document.createElement('h4');
                 groupHeaderText = 'Group ' + groupNames[i];
-
                 groupHeader.innerHTML = groupHeaderText;
+
+                // Add players contributions in each group.
                 barsDiv.appendChild(div);
                 div.appendChild(groupHeader);
+
+                group = barsValues[0][i];
                 for (j = 0; j < group.length; j++) {
 
                     player = group[j];
 
-                    // It is me?
+                    // Check the id of the player with own id. It is me?
                     if (barsValues[1][0] === i && barsValues[1][1] === j) {
-                        color = [undefined, '#9932CC'];
+                        color = [ undefined, '#9932CC' ];
                         text = ' YOU <img src="imgs/arrow.jpg" style="height:15px;"/>';
                     }
                     else {
-                        color = ['#DEB887', '#A52A2A'];
+                        color = [ '#DEB887', '#A52A2A' ];
                         text = '';
                     }
 
@@ -143,6 +150,8 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
             }
 
             node.game.oldPayoff = +barsValues[2]; // final payoff
+
+            // Update the text displaying how much the player won.
 
             // How many coins player put in personal account.
             save = COINS - node.game.oldContrib;

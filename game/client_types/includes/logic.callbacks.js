@@ -159,7 +159,7 @@ function computeGroupStats(groups) {
  */
 function emitPlayersResults(pId, bars, position, payoff, compatibility) {
     var finalBars;
-    finalBars = [bars, position, payoff, compatibility];
+    finalBars = [ bars, position, payoff, compatibility ];
     node.say('results', pId, finalBars);
 }
 
