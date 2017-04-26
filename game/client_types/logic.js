@@ -108,13 +108,10 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
                 player: p.player,
                 group: p.group,
                 contribution: p.contribution,
-                demand: null === p.demand ? "NA" : p.demand,
                 noisyContribution: noisyContribution,
                 payoff: payoff,
                 groupAvgContr: finalGroupStats.avgContr,
                 groupStdContr: finalGroupStats.stdContr,
-                groupAvgDemand: finalGroupStats.avgDemand,
-                groupStdDemand: finalGroupStats.stdDemand,
                 rankBeforeNoise: ranking.indexOf(p.id) + 1,
                 rankAfterNoise: noisyRanking.indexOf(p.id) + 1,
                 timeup: p.isTimeOut
