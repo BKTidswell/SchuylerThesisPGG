@@ -46,20 +46,16 @@ function computeGroupAccount(prev, curr) {
 }
 
 // If two contributions are exactly the same, then they are randomly ordered.
-function sortContributions(c1, c2) {
+function sortContributionsWithLies(c1, c2) {
+    // TODO: You should take into account if c1 or c2 is a lie.
+    
+    // Default sorting.
     if (c1.contribution > c2.contribution) return -1;
     if (c1.contribution < c2.contribution) return 1;
     if (Math.random() <= 0.5) return -1;
     return 1;
 }
 
-// If two contributions are exactly the same, then they are randomly ordered.
-function sortNoisyContributions(c1, c2) {
-    if (c1.noisyContribution > c2.noisyContribution) return -1;
-    if (c1.noisyContribution < c2.noisyContribution) return 1;
-    if (Math.random() <= 0.5) return -1;
-    return 1;
-}
 
 /**
  * Returns payoff
@@ -113,6 +109,13 @@ function doGroupMatching(sortedContribs) {
     };
 }
 
+function doLieDetection(db) {
+    db.each(function(item) {
+        // TODO: Mark a lie as detected here.
+    });
+}
+
+
 function computeGroupStats(groups) {
     var i, len, group;
     var j, lenJ, entry;
@@ -143,10 +146,10 @@ function computeGroupStats(groups) {
 
         out[groupName] = {
             avgContr: cSum / lenJ,
-            stdContr: df <= 1 ? 'NA' : 
+            stdContr: df <= 1 ? 'NA' :
                 Math.sqrt((cSumSquared - (Math.pow(cSum, 2) / lenJ)) / df)
         };
-        
+
     }
     return out;
 }
@@ -175,36 +178,29 @@ function finalizeRound(currentStage, bars,
                                    noisyRanking, noisyGroupStats);
     }
 
-//     console.log(noisyGroups.length);
-//     console.log('!!!!!');
 
     // Save the results for each player, and notify him.
     i = -1, len = noisyGroups.length;
     for (; ++i < len;) {
         j = -1, lenJ = noisyGroups[i].length;
-        
-//         console.log(noisyGroups[i].length);
-//         console.log('======');
-        
+
+
         for (; ++j < lenJ;) {
             contribObj = noisyGroups[i][j];
 
             // Position in Rank (array of group id, position within group).
             positionInNoisyRank = [i, j];
             pId = contribObj.player;
-            
+
             playerPayoff = getPayoff(bars, positionInNoisyRank);
-            
+
             // Updating the player database with the current payoff.
             code = channel.registry.getClient(pId);
 
-            if (!code) {
-                console.log('AAAH code not found: ', pId);                
-            }      
             code.win = !code.win ? playerPayoff : code.win + playerPayoff;
             console.log('Added to ' + pId + ' ' + playerPayoff + ' ECU');
             // End Update.
-            
+
             if (settings.DB === 'MONGODB') {
                 node.game.savePlayerValues(contribObj, playerPayoff,
                                            positionInNoisyRank,
@@ -235,7 +231,7 @@ function sendResults() {
 
     receivedData = node.game.memory.stage[previousStage]
         .selexec('key', '=', 'bid');
-    
+
     // If a player submitted twice with reconnections.
 
     var i, len, o = {}, c, newSize = 0;
@@ -257,11 +253,13 @@ function sendResults() {
         receivedData = new ngc.GameDB();
         receivedData.importDB(newDb);
     }
+    
+    // Detect lies.
+    doLieDetection(receivedData);
 
-    // If a player submitted twice with reconnections.
-
+    // Sort contributons with lies.
     sortedContribs = receivedData
-        .sort(sortContributions)
+        .sort(sortContributionsWithLies)
         .fetch();
 
     // Original Ranking (without noise).

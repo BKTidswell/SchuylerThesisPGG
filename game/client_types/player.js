@@ -37,7 +37,6 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
         this.doneButton = node.widgets.append('DoneButton', header);
 
         this.isValidContribution = function(n) {
-            debugger
             return false !== JSUS.isInt(n, -1, (COINS + 1));
         };
 
@@ -74,8 +73,6 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
             // Clear previous errors.
             divErrors = W.getElementById('divErrors');
             divErrors.innerHTML = '';
-
-debugger
 
             // Always check the contribution.
             contrib = W.getElementById('contribution').value;
@@ -327,7 +324,6 @@ debugger
         },
         done: function() {
             var validation, bid;
-debugger
             validation = node.game.checkInputs();
             if (!validation) return false;
             bid = node.game.correctInputs(validation);
