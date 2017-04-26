@@ -41,10 +41,6 @@ function averageContribution(pv, cv) {
     return pv + cv.contribution;
 }
 
-function averageDemand(pv, cv) {
-    return pv + cv.demand;
-}
-
 function computeGroupAccount(prev, curr) {
     return prev + curr[0];
 }
@@ -108,7 +104,7 @@ function doGroupMatching(sortedContribs) {
         entry.group = groupNames[gId];
         groups[gId].push(entry);
         ranking.push(entry.player);
-        bars[gId].push([entry.contribution, entry.demand]);
+        bars[gId].push([entry.contribution, 0]); // 0 is demand (not used).
     }
     return {
         groups: groups,
@@ -141,11 +137,6 @@ function computeGroupStats(groups) {
 
             cSum += entry.contribution;
             cSumSquared = Math.pow(entry.contribution, 2);
-
-            if (ENDO) {
-                dSum += entry.demand;
-                dSumSquared = Math.pow(entry.demand, 2);
-            }
         }
 
         df = lenJ - 1;
@@ -155,16 +146,7 @@ function computeGroupStats(groups) {
             stdContr: df <= 1 ? 'NA' : 
                 Math.sqrt((cSumSquared - (Math.pow(cSum, 2) / lenJ)) / df)
         };
-
-        if (ENDO) {
-            out[groupName].avgDemand = dSum / lenJ;
-            out[groupName].stdDemand = df <= 1 ? 'NA' :
-                Math.sqrt((dSumSquared - (Math.pow(dSum, 2) / lenJ)) / df);
-        }
-        else {
-            out[groupName].avgDemand = 'NA';
-            out[groupName].stdDemand = 'NA';
-        }
+        
     }
     return out;
 }

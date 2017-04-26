@@ -36,16 +36,8 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
         this.visualTimer = node.widgets.append('VisualTimer', header);
         this.doneButton = node.widgets.append('DoneButton', header);
 
-        // BID_DONE.
-        node.on('BID_DONE', function(bid, isTimeOut) {
-            node.game.oldContrib = bid;
-            node.done({
-                key: 'bid',
-                contribution: bid
-            });
-        });
-
         this.isValidContribution = function(n) {
+            debugger
             return false !== JSUS.isInt(n, -1, (COINS + 1));
         };
 
@@ -79,10 +71,11 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
             var contrib;
             var divErrors, errorC;
 
-            divErrors = W.getElementById('divErrors');
-
             // Clear previous errors.
+            divErrors = W.getElementById('divErrors');
             divErrors.innerHTML = '';
+
+debugger
 
             // Always check the contribution.
             contrib = W.getElementById('contribution').value;
@@ -206,7 +199,7 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
     stager.extendStep('instructions', {
         frame: 'instructions_lie.html',
         cb: function() {
-            var b, n, s;
+            var n, s;
 
             s = node.game.settings;
             n = node.game.globals.totPlayers;
@@ -215,10 +208,6 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
             W.setInnerHTML('players-count-minus-1', (n-1));
             W.setInnerHTML('rounds-count', s.REPEAT);
 
-            b = W.getElementById('read');
-            b.onclick = function() {
-                node.done();
-            };
             console.log('Instructions');
         }
     });
@@ -324,40 +313,43 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
 
             // Clear previous errors.
             W.setInnerHTML('divErrors', '');
-
             // Clear contribution inputs.
             W.getElementById('contribution').value = '';
 
             console.log('Meritocracy: bid page.');
         },
         timeup: function() {
-            var validation, validInputs;
+            var validation;
             console.log('TIMEUP !');
-            validation = this.checkInputs();
-            validInputs = this.correctInputs(validation);
-            node.emit('BID_DONE', validInputs, true);
+            validation = node.game.checkInputs();
+            node.game.correctInputs(validation);
+            node.done();
         },
         done: function() {
-            var validation, validInputs;
+            var validation, bid;
+debugger
             validation = node.game.checkInputs();
-            if (!validation) return;
-            validInputs = node.game.correctInputs(validation);
-            node.emit('BID_DONE', validInputs, false);
+            if (!validation) return false;
+            bid = node.game.correctInputs(validation);
+
+            // Store reference ot old bid.
+            node.game.oldContrib = bid;
+
+            return {
+                key: 'bid',
+                contribution: bid
+            };                      
         }
     });
 
     stager.extendStep('results', {
+        frame: 'results_lie.html',
         cb: function () {
-            W.loadFrame(node.game.settings.resultsPage, function() {
-                node.on.data('results', function(msg) {
-                    var treatment, barsValues;
-                    console.log('Received results.');
-                    barsValues = msg.data;
-                    treatment = node.env('roomType');
-                    this.updateResults(barsValues);
-                });
+            node.on.data('results', function(msg) {
+                console.log('Received results.');
+                node.game.updateResults(msg.data);
             });
-        }  
+        }                   
     });
 
     stager.extendStep('questionnaire', {
