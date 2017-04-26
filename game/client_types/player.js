@@ -38,13 +38,16 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
 
         // BID_DONE.
         node.on('BID_DONE', function(bid, isTimeOut) {
-            W.getElementById('submitOffer').disabled = 'disabled';
-            node.game.oldContrib = bid.contrib;
+            node.game.oldContrib = bid;
             node.done({
                 key: 'bid',
-                contribution: bid.contrib
+                contribution: bid
             });
         });
+
+        this.isValidContribution = function(n) {
+            return false !== JSUS.isInt(n, -1, (COINS + 1));
+        };
 
         // Takes in input the results of _checkInputs_ and correct eventual
         // mistakes. If in the first round a random value is chosen, otherwise
@@ -53,30 +56,20 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
             var contrib;
             var errorC, errorD;
 
-            if (checkResults.success) {
+            if (checkResults) {
                 contrib = JSUS.isInt(W.getElementById('contribution').value);
             }
             else {
-
-                if (checkResults.errContrib) {
-
-                    if (!node.game.oldContrib) {
-                        contrib = JSUS.randomInt(-1, 20);
-                    }
-                    else {
-                        contrib = node.game.oldContrib;
-                    }
-                    errorC = document.createElement('p');
-                    errorC.innerHTML = 'Your contribution was set to ' +contrib;
-                    W.getElementById('divErrors').appendChild(errorC);
-                    W.getElementById('contribution').value = contrib;
-                }
-
+                if (!node.game.oldContrib) contrib = JSUS.randomInt(-1, 20);
+                else contrib = node.game.oldContrib;
+                
+                errorC = document.createElement('p');
+                errorC.innerHTML = 'Your contribution was set to ' +contrib;
+                W.getElementById('divErrors').appendChild(errorC);
+                W.getElementById('contribution').value = contrib;
             }
 
-            return {
-                contrib: contrib
-            };
+            return contrib;
         };
 
         // Retrieves and checks the current input for contribution.
@@ -84,7 +77,7 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
         // validation. It also displays a message in case errors are found.
         this.checkInputs = function() {
             var contrib;
-            var divErrors, errorC, errorD;
+            var divErrors, errorC;
 
             divErrors = W.getElementById('divErrors');
 
@@ -101,10 +94,7 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
                 divErrors.appendChild(errorC);
             }
 
-            return {
-                success: !(errorC || errorD),
-                errContrib: !!errorC
-            };
+            return !errorC;           
         };
 
         // This function is called to create the bars.
@@ -159,12 +149,7 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
                     subdiv = document.createElement('div');
                     div.appendChild(subdiv);
                     bars.createBar(subdiv, player[0], 20, color[0], text);
-
-                    // Was here
-                    // div.appendChild(subdiv);
                 }
-                // Was here
-                // barsDiv.appendChild(div);
             }
 
             node.game.oldPayoff = +barsValues[2]; // final payoff
@@ -219,23 +204,21 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
     // STAGES and STEPS.
 
     stager.extendStep('instructions', {
+        frame: 'instructions_lie.html',
         cb: function() {
-            W.loadFrame(node.game.settings.instrPage, function() {
-                var b, n, s;
+            var b, n, s;
 
-                s = node.game.settings;
-                n = node.game.globals.totPlayers;
+            s = node.game.settings;
+            n = node.game.globals.totPlayers;
 
-                W.setInnerHTML('players-count', n);
-                W.setInnerHTML('players-count-minus-1', (n-1));
-                W.setInnerHTML('rounds-count', s.REPEAT);
+            W.setInnerHTML('players-count', n);
+            W.setInnerHTML('players-count-minus-1', (n-1));
+            W.setInnerHTML('rounds-count', s.REPEAT);
 
-                b = W.getElementById('read');
-                b.onclick = function() {
-                    node.done();
-                };
-            });
-
+            b = W.getElementById('read');
+            b.onclick = function() {
+                node.done();
+            };
             console.log('Instructions');
         }
     });
@@ -334,20 +317,16 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
     });
 
     stager.extendStep('bid', {
+        frame: 'bidder.html',
         cb: function() {
-            W.loadFrame(node.game.settings.bidderPage, function() {
-                // Show summary previous round.
-                node.game.displaySummaryPrevRound();
+            // Show summary previous round.
+            node.game.displaySummaryPrevRound();
 
-                // Re-enable input.
-                W.getElementById('submitOffer').disabled = '';
+            // Clear previous errors.
+            W.setInnerHTML('divErrors', '');
 
-                // Clear previous errors.
-                W.setInnerHTML('divErrors', '');
-
-                // Clear contribution inputs.
-                W.getElementById('contribution').value = '';
-            });
+            // Clear contribution inputs.
+            W.getElementById('contribution').value = '';
 
             console.log('Meritocracy: bid page.');
         },
@@ -361,7 +340,7 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
         done: function() {
             var validation, validInputs;
             validation = node.game.checkInputs();
-            if (!validation.success) return;
+            if (!validation) return;
             validInputs = node.game.correctInputs(validation);
             node.emit('BID_DONE', validInputs, false);
         }
