@@ -19,7 +19,7 @@ module.exports = function(stager, settings) {
         .next('end')
         .gameover();
 
-
+    
     stager.extendStage('game', {
         steps: ['bid', 'results']
     });
@@ -27,7 +27,7 @@ module.exports = function(stager, settings) {
 
     // Modifty the stager to skip some stages.
 
-    stager.skip('instructions');
+    //stager.skip('instructions');
     stager.skip('quiz');
     // stager.skip('game');
 

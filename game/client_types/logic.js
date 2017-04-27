@@ -10,6 +10,8 @@
 var path = require('path');
 var fs   = require('fs-extra');
 
+var Database = require('nodegame-db').Database;
+
 var ngc = require('nodegame-client');
 var Stager = ngc.Stager;
 var stepRules = ngc.stepRules;
@@ -28,35 +30,126 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
     // instances of game logics.
     var counter = settings.SESSION_ID;
 
-    var DUMP_DIR, DUMP_DIR_JSON, DUMP_DIR_CSV;
+    // Group names.
+    var groupNames = settings.GROUP_NAMES;
 
-    var treatments;
+    var DUMP_DIR, DUMP_DIR_JSON, DUMP_DIR_CSV;
+    var ngdb, mdb;
+    
+    var client;
     var nbRequiredPlayers;
 
-    // Preparing storage directories.
+    var includes;
     
-    DUMP_DIR = channel.getGameDir() + '/data/' + counter + '/';
-    DUMP_DIR_JSON = DUMP_DIR + 'json/';
-    DUMP_DIR_CSV = DUMP_DIR + 'csv/';
+    // Preparing storage: FILE or MONGODB.
+    if (settings.DB === 'FILE') {
+        DUMP_DIR = channel.getGameDir() + '/data/' + counter + '/';
+        DUMP_DIR_JSON = DUMP_DIR + 'json/';
+        DUMP_DIR_CSV = DUMP_DIR + 'csv/';
 
-    // Recursively create directories.
-    fs.mkdirsSync(DUMP_DIR_JSON);
-    fs.mkdirsSync(DUMP_DIR_CSV);
+        // Recursively create directories..       
+        fs.mkdirsSync(DUMP_DIR_JSON);
+        fs.mkdirsSync(DUMP_DIR_CSV);
+    }
+    else {
+        
+        ngdb = new Database(node);
+        mdb = ngdb.getLayer('MongoDB', {
+            dbName: 'meritocracy_db',
+            collectionName: 'user_data'
+        });
 
-    // Require treatments file.
-    treatments = channel.require(__dirname + '/includes/treatments.js', {
+        mdb.connect(function() {});
+
+        node.on.data('questionnaire', function(msg) {
+            var saveObject = {
+                session: node.nodename,
+                condition: treatmentName,
+                stage: msg.stage,
+                player: msg.from,
+                created: msg.created,
+                gameName: msg.data.gameName,
+                additionalComments: msg.data.comments,
+                alreadyParticipated: msg.data.socExp,
+                strategyChoice: msg.data.stratChoice,
+                strategyComments: msg.data.stratComment
+            };
+            mdb.store(saveObject);
+        });
+
+        node.on.data('QUIZ', function(msg) {
+            var saveObject = {
+                session: node.nodename,
+                condition: treatmentName,
+                stage: msg.stage,
+                player: msg.from,
+                created: msg.created,
+                quiz: msg.data
+            };
+            mdb.store(saveObject);
+        });
+
+        node.game.savePlayerValues = function(p, payoff, positionInNoisyRank,
+                                              ranking, noisyRanking,
+                                              groupStats,
+                                              currentStage) {
+
+            var noisyContribution, finalGroupStats;
+
+            noisyContribution = 'undefined' === typeof p.noisyContribution ?
+                'NA' : p.noiseContribution;
+
+            finalGroupStats = groupStats[groupNames[positionInNoisyRank[0]]];
+
+            mdb.store({
+                session: node.nodename,
+                condition: treatmentName,
+                stage: currentStage,
+                player: p.player,
+                group: p.group,
+                contribution: p.contribution,
+                noisyContribution: noisyContribution,
+                payoff: payoff,
+                groupAvgContr: finalGroupStats.avgContr,
+                groupStdContr: finalGroupStats.stdContr,
+                rankBeforeNoise: ranking.indexOf(p.id) + 1,
+                rankAfterNoise: noisyRanking.indexOf(p.id) + 1,
+                timeup: p.isTimeOut
+            });
+        };
+
+        node.game.saveRoundResults = function(ranking, groupStats,
+                                              noisyRanking, noisyGroupStats) {
+            mdb.store({
+                session: node.nodename,
+                condition: treatmentName,
+                ranking: ranking,
+                noisyRanking: noisyRanking,
+                groupAverages: groupStats,
+                noisyGroupAverages: noisyGroupStats
+            });
+        };
+    }
+
+    
+    // Outgoing messages will be saved.
+    node.socket.journalOn = true;
+
+    // Players required to be connected at the same (NOT USED).
+    nbRequiredPlayers = gameRoom.runtimeConf.MIN_PLAYERS;
+
+    // Require logic callbacks file.
+    includes = channel.require(__dirname + '/includes/logic.callbacks.js', {
         node: node,
         settings: settings
     }, true);
 
-    
-    // Players required to be connected at the same (NOT USED).
-    nbRequiredPlayers = gameRoom.runtimeConf.MIN_PLAYERS;
-    stager.setDefaultProperty('minPlayers', nbRequiredPlayers);
-
     // Event handler registered in the init function are always valid.
     stager.setOnInit(function() {
         console.log('********************** meritocracy room ' + counter++);
+
+        // Players that disconnected temporarily.
+        node.game.disconnected = {};
 
         // "STEPPING" is the last event emitted before the stage is updated.
         node.on('STEPPING', function() {
@@ -64,33 +157,36 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
 
             currentStage = node.game.getCurrentGameStage();
 
-            // We do not save stage 0.0.0.
-            // Morever, If the last stage is equal to the current one,
-            // we are re-playing the same stage cause of a reconnection.
-            // In this case we do not update the database, or save files.
-            if (!GameStage.compare(currentStage, new GameStage())) {
-                return;
-            }
-            // Update last stage reference.
-            node.game.lastStage = currentStage;
-
-            db = node.game.memory.stage[currentStage];
-
-            if (db && db.size()) {
-                try {
-                    file = DUMP_DIR + 'memory_' + currentStage;
-
-                    // Saving results to FS.
-                    db.save(file + '.csv', { flags: 'w' });
-                    db.save(file + '.json');
-
-                    console.log('Round data saved ', currentStage);
+            if (settings.DB === 'FILE') {
+                // We do not save stage 0.0.0. 
+                // Morever, If the last stage is equal to the current one,
+                // we are re-playing the same stage cause of a reconnection.
+                // In this case we do not update the database, or save files.
+                if (!GameStage.compare(currentStage, new GameStage())) {
+                    return;
                 }
-                catch(e) {
-                    console.log('OH! An error occurred while saving: ',
-                                currentStage, ' ', e);
+                // Update last stage reference.
+                node.game.lastStage = currentStage;
+                
+                db = node.game.memory.stage[currentStage];
+                
+                if (db && db.size()) {
+                    try {
+                        file = DUMP_DIR + 'memory_' + currentStage;
+                        
+                        // Saving results to FS.
+                        db.save(file + '.csv', { flags: 'w' });
+                        db.save(file + '.json');        
+                        
+                        console.log('Round data saved ', currentStage);
+                    }
+                    catch(e) {
+                        console.log('OH! An error occurred while saving: ',
+                                    currentStage, ' ', e);
+                    }
                 }
             }
+            
             console.log(node.nodename, ' - Round:  ', currentStage);
         });
 
@@ -104,33 +200,16 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
     // Extends Stages and Steps where needed.
 
     stager.extendStep('results', {
-        init: function() {            
-            // Keep tracks of results sent to players
-            // in case of disconnections.
-            this.savedResults = {};
-        },
-        cb: function() {
-            // Computes the values for all players and all groups,
-            // sends them to the clients, and save results into database.
-            treatments[treatmentName].sendResults();
-            return true;
-        },
-        // Callback executed when a clients reconnects.
-        reconnect: function(p) {
-            setTimeout(function() {
-                // Send results (make sure that client is ready).
-                node.say('results', p.id, node.game.savedResults[p.id]);                
-            }, 200);
-        }
+        cb: includes.sendResults        
     });
-
+    
     stager.extendStep('end', {
         cb: function() {
             var code, exitcode, accesscode;
             var bonusFile, bonus, csvString;
 
             console.log('endgame');
-
+            
             bonusFile = DUMP_DIR + 'bonus.csv';
 
             console.log('FINAL PAYOFF PER PLAYER');
@@ -148,9 +227,9 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
 
                 code.win =  Number((code.win || 0) / EXCHANGE_RATE).toFixed(2);
                 code.win = parseFloat(code.win, 10);
-
+                
                 channel.registry.checkOut(p.id);
-
+                
                 node.say('WIN', p.id, {
                     win: code.win,
                     exitcode: code.ExitCode
@@ -170,7 +249,7 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
             csvString = bonus.join("\r\n");
             fs.writeFile(bonusFile, csvString, function(err) {
                 if (err) {
-                    console.log('ERROR: could not save the bonus file: ',
+                    console.log('ERROR: could not save the bonus file: ', 
                                 DUMP_DIR + 'bonus.csv');
                     console.log(err);
                 }

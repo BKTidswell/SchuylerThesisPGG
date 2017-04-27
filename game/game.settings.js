@@ -41,7 +41,7 @@ module.exports = {
 
     // Payment settings. *
     GROUP_ACCOUNT_DIVIDER: 2,
-    INITIAL_COINS: 50,
+    INITIAL_COINS: 20,
 
     // Divider ECU / DOLLARS *
     EXCHANGE_RATE: 266,
@@ -79,41 +79,8 @@ module.exports = {
     DB: 'FILE', // FILE, MONGODB
 
     // Treatments definition.
-    // (They are actually defined in the game).
-
-    // Custom pages depending on treatment.
-    bidderPage:  'bidder.html',
-    resultsPage: 'results.html',
-    quizPage: 'quiz_random.html',
 
     treatments: {
-
-        standard: {
-            instrPage: 'instructions_standard.html'
-        },
-        blackbox: {
-            instrPage: 'instructions_blackbox.html',
-            bidderPage: 'bidder_blackbox.html',
-            instructionsPage: 'instructions_blackbox.html',
-            quizPage: 'quiz_blackbox.html'
-        },
-        endo: {
-            instrPage: 'instructions_endo.html',
-            bidderPage: 'bidder_endo.html',
-            resultsPage: 'results_endo.html',
-            quizPage: 'quiz_endo.html'
-        },
-        random: {
-            instrPage: 'instructions_random.html'
-        },
-        exo_low: {
-            instrPage: 'instructions_exo_lowhigh.html',
-            quizPage: 'quiz_exo_lowhigh.html'
-        },
-        exo_high: {
-            instrPage: 'instructions_exo_lowhigh.html',
-            quizPage: 'quiz_exo_lowhigh.html'
-        },
         exo_perfect: {
             instrPage: 'instructions_exo_perfect.html',
             quizPage: 'quiz_exo_perfect.html'
