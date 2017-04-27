@@ -109,7 +109,7 @@ function doGroupMatching(sortedContribs) {
     };
 }
 
-function doLieDetection(db) {
+/*function doLieDetection(db) {
     db.each(function(item) {
 		if (receivedData.getElementById('contribution').value == receivedData.getElementbyId('lienumber').value) {
 			return 1;
@@ -120,8 +120,14 @@ function doLieDetection(db) {
         // TODO: Mark a lie as detected here.
 		// get the treatments in so there are different chances
     });
-}
+}*/
 
+function doLieDetection(db) {
+    db.each(function(item) {
+        // TODO: Mark a lie as detected here.
+        if (Math.random() < 0.5) item.lieDetected = true;
+    });
+}
 
 function computeGroupStats(groups) {
     var i, len, group;

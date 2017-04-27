@@ -95,7 +95,7 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
                     'Please enter a number between 0 and ' + COINS;
                 divErrors.appendChild(errorC);
             }
-
+			//console.log(!errorC);
             return !errorC;           
         };
 
@@ -345,7 +345,7 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
             node.game.correctInputs(validation);
             node.done();
         },
-        done: function() {
+ /*       done: function() {
             var validation, bid;
             validation = node.game.checkInputs();
             if (!validation) return false;
@@ -358,8 +358,32 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
                 key: 'bid',
                 contribution: bid
             };                      
+        }*/
+		    done: function() {
+            var validation, inputs, lie;
+            validation = node.game.checkInputs();
+            if (!validation) return false;
+
+            //bid = node.game.correctInputs(validation);
+
+            // Get the lie from the page, for example as:
+            //lie = W.getElementById('lie').value;
+            // or you modify checkInputs and correctInputs to return an object.
+            inputs = node.game.correctInputs(validation);
+            lie = inputs.lie;
+            bid = inputs.bid;
+
+            // Store reference to old bid.
+            node.game.oldContrib = bid;
+            node.game.oldLie = lie;
+
+            return {
+                key: 'bid',
+                contribution: bid
+                lie: 'lie'
+            };                      
         }
-    });
+    }); 
 
     stager.extendStep('results', {
         frame: 'results_lie.html',
