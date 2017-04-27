@@ -349,7 +349,7 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
             if (!validation) return false;
             bid = node.game.correctInputs(validation);
 
-            // Store reference ot old bid.
+            // Store reference to old bid.
             node.game.oldContrib = bid;
 
             return {
