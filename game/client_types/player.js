@@ -333,6 +333,8 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
             W.setInnerHTML('divErrors', '');
             // Clear contribution inputs.
             W.getElementById('contribution').value = '';
+			//Clear lie inputs
+			W.getElementById('lienumber').value = '';
 
             console.log('Meritocracy: bid page.');
         },
