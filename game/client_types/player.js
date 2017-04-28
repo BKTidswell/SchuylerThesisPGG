@@ -367,7 +367,7 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
             //bid = node.game.correctInputs(validation);
 
             // Get the lie from the page, for example as:
-            //lie = W.getElementById('lie').value;
+            //lie = W.getElementById('lienumber').value;
             // or you modify checkInputs and correctInputs to return an object.
             inputs = node.game.correctInputs(validation);
             lie = inputs.lie;
@@ -379,7 +379,7 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
 
             return {
                 key: 'bid',
-                contribution: bid
+                contribution: bid,
                 lie: 'lie'
             };                      
         }
