@@ -12,6 +12,7 @@
 module.exports = function(stager, settings) {
 
     stager
+		.next('consent')
         .next('instructions')
         .next('quiz')
         .repeat('game', settings.REPEAT)
@@ -26,9 +27,9 @@ module.exports = function(stager, settings) {
 
 
     // Modifty the stager to skip some stages.
-
-    stager.skip('instructions');
-    stager.skip('quiz');
+	//stager.skip('consent');
+    //stager.skip('instructions');
+    //stager.skip('quiz');
     // stager.skip('game');
 
     return stager.getState();

@@ -47,10 +47,11 @@ module.exports = {
     EXCHANGE_RATE: 266,
 
     // Conversion rate ECU to DOLLARS.
-    exchangeRate: 0.001,
+    exchangeRate: 1,
 
     TIMER: {
 
+		consent: 90000,
         instructions: 90000,
         quiz: 90000,
         bid: function() {
@@ -82,6 +83,7 @@ module.exports = {
 
     treatments: {
         exo_perfect: {
+			//consent: 'consent.html'
             instrPage: 'instructions_exo_perfect.html',
             quizPage: 'quiz_exo_perfect.html'
         }

@@ -113,8 +113,16 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
             // 3: array: groups are compatible or not (not used now)
 
             groupNames = node.game.settings.GROUP_NAMES;
+			
+			//SO IT IS THAT where does it get the bars values actually where does it get those
+			//in logic.callbacks?
+			//gotta figure out how all these bars are working together
+			
+			console.log('HERES THE BAR VALUES')
 
             console.log(barsValues);
+			
+			console.log('AND THOSE WERE THE BAR VALUES')
 
             barsDiv = W.getElementById('barsResults');
             payoffSpan = W.getElementById('payoff');
@@ -213,6 +221,25 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
     });
 
     // STAGES and STEPS.
+	
+	//consent screen
+//
+	    stager.extendStep('consent', {
+        frame: 'consent.html',
+        cb: function() {
+            var n, s;
+
+            s = node.game.settings;
+            n = node.game.globals.totPlayers;
+
+            W.setInnerHTML('players-count', n);
+            W.setInnerHTML('players-count-minus-1', (n-1));
+            W.setInnerHTML('rounds-count', s.REPEAT);
+
+            console.log('consent');
+        }
+    });
+//*/
 
     stager.extendStep('instructions', {
         frame: 'instructions_lie.html',
@@ -360,28 +387,31 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
             };                      
         }*/
 		    done: function() {
-            var validation, inputs, lie;
+            var validation, bid, lie;
             validation = node.game.checkInputs();
             if (!validation) return false;
 
-            //bid = node.game.correctInputs(validation);
+            bid = node.game.correctInputs(validation);
 
             // Get the lie from the page, for example as:
-            //lie = W.getElementById('lienumber').value;
+            lie = W.getElementById('lienumber').value;
             // or you modify checkInputs and correctInputs to return an object.
-            inputs = node.game.correctInputs(validation);
-            lie = inputs.lie;
-            bid = inputs.bid;
+            //inputs = node.game.correctInputs(validation);
+            //lie = inputs.lie;
+            //bid = inputs.bid;
 
             // Store reference to old bid.
             node.game.oldContrib = bid;
             node.game.oldLie = lie;
+			
+										console.log(node.game.memory);
+				console.log('HELLO');	
 
             return {
                 key: 'bid',
                 contribution: bid,
-                lie: 'lie'
-            };                      
+				lienumber: lie
+            };  		
         }
     }); 
 
@@ -390,6 +420,7 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
         cb: function () {
             node.on.data('results', function(msg) {
                 console.log('Received results.');
+				//console.log(msg.data)
                 node.game.updateResults(msg.data);
             });
         }                   

@@ -48,6 +48,14 @@ function computeGroupAccount(prev, curr) {
 // If two contributions are exactly the same, then they are randomly ordered.
 function sortContributionsWithLies(c1, c2) {
     // TODO: You should take into account if c1 or c2 is a lie.
+	//doliedetection goes here
+	// sorts receivedData
+	// so like if liedetected = true, then
+	// then what do i do how do i show this
+	//emit player results makes the bars iirc
+	//i can ask how the bars get made
+	//feels like the home stretch
+	//maybe itd be easier to keep the bars as is and then just have a text thing at the bottom like 'btw these guys lied' w/ the values
     
     // Default sorting.
     if (c1.contribution > c2.contribution) return -1;
@@ -65,6 +73,8 @@ function sortContributionsWithLies(c1, c2) {
  * @param  {object} currentStage current stage
  * @return {int}              payoff
  */
+ 
+ // uses some math to do the payoff, look into what group account divider is theres probs some way to do that w/out adding another variable
 function getPayoff(bars, position) {
     var payoff, group;
     group = bars[position[0]];
@@ -125,7 +135,10 @@ function doGroupMatching(sortedContribs) {
 function doLieDetection(db) {
     db.each(function(item) {
         // TODO: Mark a lie as detected here.
+		//this goes to/interacts with sortContributionsWithLies
+		// acts on receivedData which comes in with lies and contributions
         if (Math.random() < 0.5) item.lieDetected = true;
+		console.log('lie detected')
     });
 }
 
