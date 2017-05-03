@@ -387,7 +387,7 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
             };                      
         }*/
 		    done: function() {
-            var validation, bid, lie;
+            var validation, bid, lie, version;
             validation = node.game.checkInputs();
             if (!validation) return false;
 
@@ -399,6 +399,8 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
             //inputs = node.game.correctInputs(validation);
             //lie = inputs.lie;
             //bid = inputs.bid;
+			
+			version = 'twentyfivepercentcoins'
 
             // Store reference to old bid.
             node.game.oldContrib = bid;
@@ -410,7 +412,8 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
             return {
                 key: 'bid',
                 contribution: bid,
-				lienumber: lie
+				lienumber: lie,
+				version: version
             };  		
         }
     }); 

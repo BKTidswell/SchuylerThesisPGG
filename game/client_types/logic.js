@@ -108,12 +108,12 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
                 player: p.player,
                 group: p.group,
                 contribution: p.contribution,
-                noisyContribution: noisyContribution,
+                //noisyContribution: noisyContribution,
                 payoff: payoff,
-                groupAvgContr: finalGroupStats.avgContr,
-                groupStdContr: finalGroupStats.stdContr,
-                rankBeforeNoise: ranking.indexOf(p.id) + 1,
-                rankAfterNoise: noisyRanking.indexOf(p.id) + 1,
+                //groupAvgContr: finalGroupStats.avgContr,
+                //groupStdContr: finalGroupStats.stdContr,
+                //rankBeforeNoise: ranking.indexOf(p.id) + 1,
+                //rankAfterNoise: noisyRanking.indexOf(p.id) + 1,
                 timeup: p.isTimeOut
             });
         };
@@ -124,9 +124,9 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
                 session: node.nodename,
                 condition: treatmentName,
                 ranking: ranking,
-                noisyRanking: noisyRanking,
-                groupAverages: groupStats,
-                noisyGroupAverages: noisyGroupStats
+                //noisyRanking: noisyRanking,
+                //groupAverages: groupStats,
+                //noisyGroupAverages: noisyGroupStats
             });
         };
     }
@@ -240,12 +240,11 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
                     p.id, code.ExitCode, code.win, node.game.gameTerminated
                 ];
             });
-
+			
             console.log('***********************');
             console.log('Game ended');
 
-
-            bonus = [["access", "exit", "bonus", "terminated"]].concat(bonus);
+           bonus = [["access", "exit", "bonus", "terminated"]].concat(bonus);
             csvString = bonus.join("\r\n");
             fs.writeFile(bonusFile, csvString, function(err) {
                 if (err) {
@@ -253,7 +252,39 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
                                 DUMP_DIR + 'bonus.csv');
                     console.log(err);
                 }
-            });
+				console.log('WE GOT HERE')
+            }); 
+			
+		var code = channel.registry.getClient(pId);
+        // If TRUE, it is a reconnection.
+        if (!code.checkedOut) {
+            code.checkedOut = true;
+            // Save record.
+            // By default Approve is marked."
+            bonusStr = '"' + (code.AccessCode || pId) + '","' +
+                (code.ExitCode || 'NA') + '","' +
+                (code.WorkerId || 'NA') + '","' +
+                (code.HITId || 'NA') + '","' +
+                (code.AssignmentId || 'NA') + '",' +
+                bonus + ',"x",\n';
+            appendToBonusFile(bonusStr);
+        }
+		
+        function appendToBonusFile(row) {
+        if ('undefined' === typeof row) {
+            row = '"access","exit","WorkerId","hid","AssignmentId",' +
+                '"bonus","Approve","Reject"\n';
+        }
+        fs.appendFile(gameDir + 'data/bonus.csv', row, function(err) {
+            if (err) {
+                console.log(err);
+                console.log(row);
+            }
+        });
+    }
+
+			
+			
         }
     });
 

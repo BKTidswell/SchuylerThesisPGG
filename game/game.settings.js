@@ -24,7 +24,7 @@ module.exports = {
 
     // Numnber of game rounds repetitions.
     // TODO: if the value is changed the QUIZ page needs to be updated.
-    REPEAT: 4,
+    REPEAT: 2,
 
     // Minimum number of players that must be always connected.
     MIN_PLAYERS: 4,
@@ -47,7 +47,7 @@ module.exports = {
     EXCHANGE_RATE: 266,
 
     // Conversion rate ECU to DOLLARS.
-    exchangeRate: 1,
+    exchangeRate: 0.01,
 
     TIMER: {
 

@@ -27,10 +27,11 @@ module.exports = function(stager, settings) {
 
 
     // Modifty the stager to skip some stages.
-	//stager.skip('consent');
-    //stager.skip('instructions');
-    //stager.skip('quiz');
-    // stager.skip('game');
+	stager.skip('consent');
+    stager.skip('instructions');
+    stager.skip('quiz');
+	//stager.skip('questionnaire')
+    stager.skip('game');
 
     return stager.getState();
 };

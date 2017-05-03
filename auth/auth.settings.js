@@ -21,6 +21,30 @@ module.exports = {
     codes: 'auth.codes.js',
 
     // Future option. Not available now. Path to login page in `public/`
-    page: 'login.htm'
+    page: 'login.htm',
+
+// stuff for mturk
+	
+	// Remote clients will be able to claim an id via GET request
+// from the task description page.
+claimId: true,
+
+// Validates incoming requests.
+claimIdValidateRequest: function(query, headers) {
+    if ('string' !== typeof query.a || query.a === '') {
+        return 'missing or invalid AssignmentId';
+    }
+    if ('string' !== typeof query.h || query.h === '') {
+        return 'missing or invalid HITId';
+    }
+    return true;
+},
+
+// Stores information about worker in the database.
+claimIdPostProcess: function(code, query, headers) {
+    code.WorkerId = query.id;
+    code.AssignmentId = query.a;
+    code.HITId = query.h;
+}
 
 };
