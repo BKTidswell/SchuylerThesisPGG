@@ -236,15 +236,23 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
                 });
 
                 console.log(p.id, ': ',  code.win, code.ExitCode);
+
                 return [
-                    p.id, code.ExitCode, code.win, node.game.gameTerminated
+                    p.AccessCode || p.id,
+                    code.ExitCode || 'NA',
+                    code.HITId || 'NA',
+                    code.AssignmentId || 'NA',
+                    code.win,
+                    "x"
                 ];
             });
-			
+	    
             console.log('***********************');
             console.log('Game ended');
 
-           bonus = [["access", "exit", "bonus", "terminated"]].concat(bonus);
+            bonus = [["access", "exit", "WorkerId", "hid", "AssignmentId",
+                      "bonus", "Approve", "Reject"]].concat(bonus);
+
             csvString = bonus.join("\r\n");
             fs.writeFile(bonusFile, csvString, function(err) {
                 if (err) {
@@ -252,39 +260,8 @@ module.exports = function(treatmentName, settings, stager, setup, gameRoom) {
                                 DUMP_DIR + 'bonus.csv');
                     console.log(err);
                 }
-				console.log('WE GOT HERE')
-            }); 
-			
-		var code = channel.registry.getClient(pId);
-        // If TRUE, it is a reconnection.
-        if (!code.checkedOut) {
-            code.checkedOut = true;
-            // Save record.
-            // By default Approve is marked."
-            bonusStr = '"' + (code.AccessCode || pId) + '","' +
-                (code.ExitCode || 'NA') + '","' +
-                (code.WorkerId || 'NA') + '","' +
-                (code.HITId || 'NA') + '","' +
-                (code.AssignmentId || 'NA') + '",' +
-                bonus + ',"x",\n';
-            appendToBonusFile(bonusStr);
-        }
-		
-        function appendToBonusFile(row) {
-        if ('undefined' === typeof row) {
-            row = '"access","exit","WorkerId","hid","AssignmentId",' +
-                '"bonus","Approve","Reject"\n';
-        }
-        fs.appendFile(gameDir + 'data/bonus.csv', row, function(err) {
-            if (err) {
-                console.log(err);
-                console.log(row);
-            }
-        });
-    }
-
-			
-			
+		console.log('WE GOT HERE')
+            });
         }
     });
 
